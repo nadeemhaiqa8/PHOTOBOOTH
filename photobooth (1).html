@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom Booth ✨ your lil photo booth bestie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF6FB;
+    --cream-deep:#FFE8F5;
+    --blush:#FFC2E2;
+    --blush-deep:#FF8FC7;
+    --lavender:#E3D2FF;
+    --lavender-deep:#C6A6FF;
+    --mint:#9DF3D4;
+    --yellow:#FFE985;
+    --rose-gold:#FF5FAE;
+    --rose-gold-light:#FF9BD2;
+    --ink:#3B2350;
+    --ink-soft:#8A6BA8;
+    --white:#FFFFFF;
+    --outline:#2B1740;
+    --shadow: 4px 4px 0 var(--outline);
+    --shadow-lg: 6px 6px 0 var(--outline);
+    --radius: 24px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 85% 8%, var(--mint) 0%, transparent 40%),
+      radial-gradient(circle at 8% 85%, var(--yellow) 0%, transparent 42%),
+      linear-gradient(160deg, var(--cream) 0%, var(--cream-deep) 45%, var(--lavender) 100%);
+    background-attachment: fixed;
+    font-family:'Poppins', sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 60px;
+  }
+  h1,h2,h3{font-family:'Baloo 2', sans-serif; font-weight:700; margin:0;}
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .brand .dot{
+    width:16px;height:16px;border-radius:50%;
+    background: var(--rose-gold);
+    border:2.5px solid var(--outline);
+    animation: bob 2.4s ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) rotate(0deg);} 50%{ transform:translateY(-4px) rotate(12deg);} }
+  .brand h1{font-size:2.3rem; letter-spacing:0.2px; color:var(--ink); text-shadow: 3px 3px 0 var(--blush);}
+  .tagline{color:var(--ink-soft); font-size:1rem; font-weight:600; margin-bottom:26px; text-align:center;}
+
+  /* Step indicator */
+  .steps{
+    display:flex;
+    gap:10px;
+    margin-bottom:30px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .step{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 16px;
+    border-radius:999px;
+    background:var(--white);
+    border:2.5px solid var(--outline);
+    box-shadow: 3px 3px 0 var(--outline);
+    font-size:0.85rem;
+    font-weight:700;
+    color:var(--ink-soft);
+    transition: all .3s ease;
+  }
+  .step .num{
+    width:20px;height:20px;border-radius:50%;
+    background:var(--cream-deep);
+    color:var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.7rem; font-weight:800;
+    transition: all .3s ease;
+  }
+  .step.active{
+    background: var(--rose-gold);
+    color:var(--white);
+  }
+  .step.active .num{ background:var(--white); color:var(--rose-gold); }
+  .step.done .num{ background:var(--mint); color:var(--ink); }
+  .step.done{ color:var(--ink); background:var(--yellow); }
+
+  .screen{ display:none; width:100%; max-width:980px; flex-direction:column; align-items:center; }
+  .screen.active{ display:flex; }
+
+  .card{
+    background:var(--white);
+    border-radius: var(--radius);
+    border: 3px solid var(--outline);
+    box-shadow: var(--shadow-lg);
+    padding:28px;
+    width:100%;
+  }
+
+  /* Setup screen */
+  .setup-grid{
+    display:grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap:28px;
+  }
+  @media (max-width: 760px){ .setup-grid{ grid-template-columns: 1fr; } }
+
+  .preview-wrap{
+    position:relative;
+    border-radius:18px;
+    overflow:hidden;
+    background:#000;
+    aspect-ratio: 4/3;
+    border: 3px solid var(--outline);
+    box-shadow: inset 0 0 0 6px var(--cream);
+  }
+  video{
+    width:100%; height:100%; object-fit:cover;
+    transform: scaleX(-1);
+    display:block;
+  }
+  .cam-error{
+    position:absolute; inset:0;
+    background:var(--ink);
+    color:var(--white);
+    display:none;
+    flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center;
+    padding:24px;
+    font-size:0.9rem;
+    gap:12px;
+  }
+  .cam-error.show{ display:flex; }
+  .cam-error button{ margin-top:4px; }
+
+  .picker-block{ margin-bottom:20px; }
+  .picker-block h3{ font-size:1.05rem; margin-bottom:10px; color:var(--ink); }
+  .swatch-row{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  .frame-thumb{
+    width:56px; height:56px; border-radius:14px;
+    border:2.5px solid var(--outline);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.65rem; text-align:center; color:var(--ink-soft);
+    background:var(--cream);
+    transition: all .15s ease;
+    padding:4px;
+  }
+  .frame-thumb canvas{ width:100%; height:100%; border-radius:8px; }
+  .frame-thumb:hover{ transform: rotate(-3deg) scale(1.05); }
+  .frame-thumb.selected{ border-color:var(--outline); background:var(--yellow); transform:translateY(-3px) rotate(-2deg); box-shadow: 3px 3px 0 var(--outline); }
+
+  .filter-thumb{
+    padding:8px 14px;
+    border-radius:999px;
+    background:var(--cream);
+    color:var(--ink-soft);
+    font-size:0.8rem;
+    font-weight:700;
+    cursor:pointer;
+    border:2.5px solid var(--outline);
+    transition: all .15s ease;
+  }
+  .filter-thumb:hover{ transform: translateY(-2px); }
+  .filter-thumb.selected{ background:var(--mint); color:var(--ink); box-shadow: 3px 3px 0 var(--outline); }
+
+  button{
+    font-family:'Poppins', sans-serif;
+    border:none;
+    cursor:pointer;
+  }
+  .btn-primary{
+    background: var(--rose-gold);
+    color:var(--white);
+    padding:15px 30px;
+    border-radius:999px;
+    font-size:1.05rem;
+    font-weight:800;
+    border: 3px solid var(--outline);
+    box-shadow: var(--shadow-lg);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary:hover{ transform: translate(-2px,-2px) rotate(-1deg); box-shadow: 8px 8px 0 var(--outline); }
+  .btn-primary:active{ transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--outline); }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; transform:none; }
+
+  .btn-secondary{
+    background:var(--cream);
+    color:var(--ink);
+    padding:13px 24px;
+    border-radius:999px;
+    font-size:0.9rem;
+    font-weight:700;
+    border: 3px solid var(--outline);
+    box-shadow: var(--shadow);
+    transition: all .15s ease;
+  }
+  .btn-secondary:hover{ background:var(--lavender); transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--outline); }
+  .btn-secondary:active{ transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--outline); }
+
+  .actions-row{ display:flex; gap:12px; justify-content:center; margin-top:22px; flex-wrap:wrap; }
+
+  /* Capture screen */
+  .capture-stage{
+    position:relative;
+    width:100%;
+    max-width:600px;
+    border-radius:22px;
+    overflow:hidden;
+    aspect-ratio:4/3;
+    background:#000;
+    border: 3px solid var(--outline);
+    box-shadow: var(--shadow-lg);
+  }
+  .capture-stage video{ width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+  .overlay-center{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  .countdown-number{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:8rem;
+    color:#fff;
+    -webkit-text-stroke: 4px var(--outline);
+    paint-order: stroke fill;
+    text-shadow: 0 6px 0 rgba(0,0,0,0.25);
+    animation: popIn .9s ease;
+  }
+  .smile-text{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:3.4rem;
+    color:var(--yellow);
+    -webkit-text-stroke: 3px var(--outline);
+    paint-order: stroke fill;
+    animation: popIn .5s ease;
+  }
+  @keyframes popIn{
+    0%{ transform:scale(0.3) rotate(-8deg); opacity:0; }
+    55%{ transform:scale(1.2) rotate(4deg); opacity:1; }
+    100%{ transform:scale(1) rotate(0deg); opacity:1; }
+  }
+  .flash{
+    position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none;
+  }
+  .flash.go{ animation: flashPop .35s ease; }
+  @keyframes flashPop{ 0%{opacity:0;} 15%{opacity:0.95;} 100%{opacity:0;} }
+
+  .shot-dots{ display:flex; gap:10px; margin-top:20px; }
+  .shot-dot{
+    width:14px; height:14px; border-radius:50%;
+    background:var(--cream-deep);
+    border: 2px solid var(--outline);
+    transition: all .3s ease;
+  }
+  .shot-dot.done{ background:var(--mint); }
+  .shot-dot.active{ background:var(--rose-gold); transform:scale(1.3); }
+
+  .capture-label{ margin-top:16px; color:var(--ink); font-weight:700; font-size:0.95rem; }
+
+  /* Decorate screen */
+  .decorate-grid{
+    display:grid;
+    grid-template-columns: 1fr 300px;
+    gap:26px;
+    width:100%;
+    align-items:start;
+  }
+  @media (max-width: 820px){ .decorate-grid{ grid-template-columns:1fr; } }
+
+  .stage-wrap{
+    position:relative;
+    width:100%;
+    max-width:420px;
+    margin:0 auto;
+    background:var(--cream);
+    border-radius:18px;
+    border: 3px solid var(--outline);
+    padding:10px;
+    box-shadow: var(--shadow-lg);
+  }
+  .stage{
+    position:relative;
+    width:100%;
+    line-height:0;
+    user-select:none;
+  }
+  .stage canvas{ width:100%; height:auto; display:block; border-radius:8px; }
+  .sticker-layer{
+    position:absolute; inset:0;
+    touch-action:none;
+  }
+  .sticker{
+    position:absolute;
+    transform-origin:center;
+    cursor:grab;
+    line-height:1;
+    white-space:nowrap;
+    padding:4px;
+  }
+  .sticker.selected{ outline:2px dashed var(--outline); border-radius:8px; }
+  .sticker .handle{
+    position:absolute;
+    width:22px; height:22px;
+    background:var(--rose-gold);
+    border:2.5px solid var(--outline);
+    border-radius:50%;
+    display:none;
+    align-items:center; justify-content:center;
+    color:#fff; font-size:11px;
+    cursor:pointer;
+  }
+  .sticker.selected .handle{ display:flex; }
+  .handle.resize{ right:-11px; bottom:-11px; cursor:nwse-resize; background:var(--mint); }
+  .handle.rotate{ left:50%; top:-30px; transform:translateX(-50%); cursor:grab; background:var(--yellow); }
+  .handle.del{ right:-11px; top:-11px; background:#FF6B6B; cursor:pointer; }
+
+  .side-panel{ display:flex; flex-direction:column; gap:20px; }
+  .panel-card{
+    background:var(--white);
+    border-radius:18px;
+    border: 3px solid var(--outline);
+    padding:18px;
+    box-shadow: var(--shadow);
+  }
+  .panel-card h3{ font-size:1rem; margin-bottom:12px; }
+  .sticker-tray{ display:flex; flex-wrap:wrap; gap:8px; }
+  .sticker-tray button{
+    width:44px; height:44px;
+    font-size:1.35rem;
+    background:var(--cream);
+    border:2px solid var(--outline);
+    border-radius:12px;
+    transition: all .15s ease;
+  }
+  .sticker-tray button:hover{ background:var(--blush); transform:scale(1.1) rotate(-6deg); }
+
+  .text-controls{ display:flex; flex-direction:column; gap:10px; }
+  .text-controls input[type="text"]{
+    padding:10px 12px;
+    border-radius:10px;
+    border:2px solid var(--outline);
+    font-family:'Poppins', sans-serif;
+    font-weight:600;
+    font-size:0.9rem;
+  }
+  .text-controls .row{ display:flex; gap:8px; align-items:center; }
+  select{
+    padding:8px 10px; border-radius:8px; border:2px solid var(--outline);
+    font-family:'Poppins', sans-serif; font-weight:600; font-size:0.85rem; background:var(--white);
+  }
+  input[type="color"]{
+    width:38px; height:34px; border:2px solid var(--outline); border-radius:8px; cursor:pointer; background:none;
+  }
+
+  .mini-swatch-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .mini-frame{
+    width:38px; height:38px; border-radius:9px; cursor:pointer;
+    border:2px solid var(--outline); overflow:hidden;
+  }
+  .mini-frame canvas{ width:100%; height:100%; }
+  .mini-frame.selected{ box-shadow: 2px 2px 0 var(--outline); background:var(--yellow); }
+  .mini-filter{
+    padding:6px 10px; border-radius:999px; font-size:0.75rem; font-weight:700;
+    background:var(--cream); color:var(--ink-soft); cursor:pointer; border:2px solid var(--outline);
+  }
+  .mini-filter.selected{ background:var(--mint); color:var(--ink); box-shadow: 2px 2px 0 var(--outline); }
+
+  footer.hint{ margin-top:10px; font-size:0.8rem; font-weight:600; color:var(--ink-soft); text-align:center; }
+</style>
+</head>
+<body>
+
+  <div class="brand"><span class="dot"></span><h1>Bloom Booth 🎀</h1></div>
+  <p class="tagline">pose, decorate, download — it's giving main character energy ✨</p>
+
+  <div class="steps">
+    <div class="step" data-step="1"><span class="num">1</span> pick ur vibe</div>
+    <div class="step" data-step="2"><span class="num">2</span> say cheese!</div>
+    <div class="step" data-step="3"><span class="num">3</span> deco time</div>
+    <div class="step" data-step="4"><span class="num">4</span> get the pic</div>
+  </div>
+
+  <!-- SETUP SCREEN -->
+  <section class="screen active" id="screen-setup">
+    <div class="card setup-grid">
+      <div>
+        <div class="preview-wrap">
+          <video id="video" autoplay playsinline muted></video>
+          <div class="cam-error" id="camError">
+            <div>bestie we can't see you 👀 pls allow camera access and let's try that again</div>
+            <button class="btn-secondary" id="retryCam">try again</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="picker-block">
+          <h3>pick a frame 🖼️</h3>
+          <div class="swatch-row" id="frameThumbs"></div>
+        </div>
+        <div class="picker-block">
+          <h3>pick a filter 🎨</h3>
+          <div class="swatch-row" id="filterThumbs"></div>
+        </div>
+        <div class="actions-row">
+          <button class="btn-primary" id="startBtn">let's gooo 📸</button>
+        </div>
+        <footer class="hint">4 pics, 3 secs apart — serve your best angle!</footer>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAPTURE SCREEN -->
+  <section class="screen" id="screen-capture">
+    <div class="capture-stage" id="captureStage">
+      <video id="videoCapture" autoplay playsinline muted></video>
+      <div class="overlay-center" id="overlayCenter"></div>
+      <div class="flash" id="flash"></div>
+    </div>
+    <div class="shot-dots" id="shotDots">
+      <div class="shot-dot"></div><div class="shot-dot"></div><div class="shot-dot"></div><div class="shot-dot"></div>
+    </div>
+    <div class="capture-label" id="captureLabel">get ready bestie…</div>
+  </section>
+
+  <!-- DECORATE / DOWNLOAD SCREEN -->
+  <section class="screen" id="screen-decorate">
+    <div class="decorate-grid">
+      <div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <canvas id="finalCanvas"></canvas>
+            <div class="sticker-layer" id="stickerLayer"></div>
+          </div>
+        </div>
+        <div class="actions-row">
+          <button class="btn-secondary" id="retakeBtn">nah, redo 🔁</button>
+          <button class="btn-primary" id="downloadBtn">download the fit 💾</button>
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <div class="panel-card">
+          <h3>sticker stash 🌈</h3>
+          <div class="sticker-tray" id="stickerTray"></div>
+        </div>
+
+        <div class="panel-card">
+          <h3>caption it 💬</h3>
+          <div class="text-controls">
+            <input type="text" id="captionInput" placeholder="say something unhinged…" maxlength="40">
+            <div class="row">
+              <input type="color" id="captionColor" value="#8a5a4c">
+              <select id="captionFont">
+                <option value="'Caveat', cursive" selected>handwritten</option>
+                <option value="'Baloo 2', sans-serif">bubbly</option>
+                <option value="'Poppins', sans-serif">clean</option>
+              </select>
+              <button class="btn-secondary" id="addCaptionBtn">add</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <h3>switch the frame 🖼️</h3>
+          <div class="mini-swatch-row" id="frameThumbsMini"></div>
+        </div>
+
+        <div class="panel-card">
+          <h3>switch the filter 🎨</h3>
+          <div class="mini-swatch-row" id="filterThumbsMini"></div>
+        </div>
+
+        <footer class="hint">drag to move · corner dot = resize · top dot = spin it</footer>
+      </div>
+    </div>
+  </section>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Config ---------------- */
+  const PHOTO_W = 480, PHOTO_H = 360, GAP = 18, PAD = 36, CAPTION_H = 60;
+  const STRIP_W = PHOTO_W + PAD*2;
+  const STRIP_H = PAD + (PHOTO_H*4) + (GAP*3) + CAPTION_H + PAD;
+  const REF_W = STRIP_W; // reference width used for sticker sizing
+
+  const FILTERS = [
+    { key:'none',  label:'Normal',   css:'none' },
+    { key:'bw',    label:'B & W',    css:'grayscale(1) contrast(1.1)' },
+    { key:'sepia', label:'Vintage',  css:'sepia(0.75) contrast(1.05) brightness(1.05)' },
+    { key:'warm',  label:'Warm',     css:'sepia(0.3) saturate(1.35) hue-rotate(-8deg) brightness(1.05)' },
+    { key:'cool',  label:'Cool',     css:'saturate(1.15) hue-rotate(170deg) brightness(1.05) contrast(1.05)' },
+    { key:'film',  label:'Film',     css:'contrast(1.45) brightness(0.95) saturate(0.8)' },
+  ];
+
+  function roundRect(ctx,x,y,w,h,r){
+    if (typeof r === 'number') r = {tl:r,tr:r,br:r,bl:r};
+    ctx.beginPath();
+    ctx.moveTo(x+r.tl,y);
+    ctx.lineTo(x+w-r.tr,y);
+    ctx.arcTo(x+w,y,x+w,y+r.tr,r.tr);
+    ctx.lineTo(x+w,y+h-r.br);
+    ctx.arcTo(x+w,y+h,x+w-r.br,y+h,r.br);
+    ctx.lineTo(x+r.bl,y+h);
+    ctx.arcTo(x,y+h,x,y+h-r.bl,r.bl);
+    ctx.lineTo(x,y+r.tl);
+    ctx.arcTo(x,y,x+r.tl,y,r.tl);
+    ctx.closePath();
+  }
+
+  function drawScallopEdge(ctx, x, y, w, bumpR, dir){
+    // dir: 1 for edge bumping downward/outward on horizontal top edge etc. We'll just draw along top and bottom.
+    const count = Math.round(w / (bumpR*2));
+    const step = w / count;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    for(let i=0;i<count;i++){
+      const cx = x + step*i + step/2;
+      ctx.arc(cx, y, step/2, Math.PI, 0, dir < 0);
+    }
+    ctx.lineTo(x+w, y);
+  }
+
+  function photoSlotY(i){ return PAD + i*(PHOTO_H+GAP); }
+
+  function drawPhotos(ctx, rawShots, filterCss, cornerRadius){
+    for(let i=0;i<4;i++){
+      const y = photoSlotY(i);
+      const shot = rawShots[i];
+      ctx.save();
+      if (cornerRadius){
+        roundRect(ctx, PAD, y, PHOTO_W, PHOTO_H, cornerRadius);
+        ctx.clip();
+      }
+      ctx.filter = filterCss;
+      if (shot){
+        ctx.drawImage(shot, PAD, y, PHOTO_W, PHOTO_H);
+      } else {
+        ctx.fillStyle = '#e8e0d6';
+        ctx.fillRect(PAD, y, PHOTO_W, PHOTO_H);
+      }
+      ctx.filter = 'none';
+      ctx.restore();
+    }
+  }
+
+  const FRAMES = [
+    { key:'classic', label:'Cutie Classic',
+      draw(ctx, rawShots, filterCss){
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0,0,STRIP_W,STRIP_H);
+        ctx.strokeStyle = '#2B1740';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(8,8,STRIP_W-16,STRIP_H-16);
+        ctx.fillStyle = '#2B1740';
+        ctx.font = '800 18px "Baloo 2", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('B L O O M   B O O T H  ✨', STRIP_W/2, PAD - 12);
+        drawPhotos(ctx, rawShots, filterCss, 6);
+        ctx.strokeStyle = '#2B1740';
+        ctx.setLineDash([7,7]);
+        ctx.lineWidth = 2;
+        for(let i=1;i<4;i++){
+          const y = photoSlotY(i) - GAP/2;
+          ctx.beginPath();
+          ctx.moveTo(14,y);
+          ctx.lineTo(STRIP_W-14,y);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+    },
+    { key:'polaroid', label:'Y2K Polaroid',
+      draw(ctx, rawShots, filterCss){
+        ctx.fillStyle = '#FFFDF6';
+        ctx.fillRect(0,0,STRIP_W,STRIP_H);
+        ctx.strokeStyle = '#2B1740';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(8,8,STRIP_W-16,STRIP_H-16);
+        for(let i=0;i<4;i++){
+          const y = photoSlotY(i);
+          ctx.save();
+          ctx.shadowColor = 'rgba(60,30,80,0.22)';
+          ctx.shadowBlur = 10;
+          ctx.shadowOffsetY = 4;
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(PAD-8, y-8, PHOTO_W+16, PHOTO_H+16);
+          ctx.restore();
+          ctx.strokeStyle = '#2B1740';
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(PAD-8, y-8, PHOTO_W+16, PHOTO_H+16);
+        }
+        drawPhotos(ctx, rawShots, filterCss, 0);
+        ctx.fillStyle = '#FF5FAE';
+        ctx.font = '700 17px "Caveat", cursive';
+        ctx.textAlign = 'center';
+        ctx.fillText('✧ bloom booth bestie ✧', STRIP_W/2, STRIP_H - PAD/2 + 6);
+      }
+    },
+    { key:'blush', label:'Bubblegum Scallop',
+      draw(ctx, rawShots, filterCss){
+        ctx.fillStyle = '#FFC2E2';
+        ctx.fillRect(0,0,STRIP_W,STRIP_H);
+        ctx.fillStyle = '#FFE0F0';
+        drawScallopEdge(ctx, 0, 0, STRIP_W, 14, 1);
+        ctx.lineTo(STRIP_W,0); ctx.closePath(); ctx.fill();
+        ctx.save();
+        ctx.translate(0, STRIP_H);
+        ctx.scale(1,-1);
+        drawScallopEdge(ctx, 0, 0, STRIP_W, 14, 1);
+        ctx.lineTo(STRIP_W,0); ctx.closePath(); ctx.fill();
+        ctx.restore();
+        drawPhotos(ctx, rawShots, filterCss, 18);
+        ctx.strokeStyle = '#2B1740';
+        ctx.lineWidth = 4;
+        roundRect(ctx, 10,10, STRIP_W-20, STRIP_H-20, 24);
+        ctx.stroke();
+      }
+    },
+    { key:'rosegold', label:'Sunshine Pop',
+      draw(ctx, rawShots, filterCss){
+        ctx.fillStyle = '#FFE985';
+        ctx.fillRect(0,0,STRIP_W,STRIP_H);
+        ctx.strokeStyle = '#2B1740';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(8,8,STRIP_W-16,STRIP_H-16);
+        for(let i=0;i<4;i++){
+          const y = photoSlotY(i);
+          ctx.strokeStyle = '#FF5FAE';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(PAD-6, y-6, PHOTO_W+12, PHOTO_H+12);
+        }
+        drawPhotos(ctx, rawShots, filterCss, 0);
+      }
+    },
+    { key:'lavender', label:'Lavender',
+      draw(ctx, rawShots, filterCss){
+        ctx.fillStyle = '#E3D2FF';
+        roundRect(ctx,0,0,STRIP_W,STRIP_H,28);
+        ctx.fill();
+        for(let i=0;i<4;i++){
+          const y = photoSlotY(i);
+          ctx.save();
+          ctx.shadowColor = 'rgba(90,50,140,0.3)';
+          ctx.shadowBlur = 16;
+          ctx.shadowOffsetY = 6;
+          ctx.fillStyle = '#fff';
+          roundRect(ctx, PAD, y, PHOTO_W, PHOTO_H, 18);
+          ctx.fill();
+          ctx.restore();
+        }
+        drawPhotos(ctx, rawShots, filterCss, 18);
+        ctx.strokeStyle = '#2B1740';
+        ctx.lineWidth = 4;
+        roundRect(ctx, 8,8, STRIP_W-16, STRIP_H-16, 22);
+        ctx.stroke();
+      }
+    },
+  ];
+
+  const STICKER_EMOJIS = ['❤️','⭐','✨','🌸','🦋','🎀','💫','🌙','☁️','🍒','🧸','💌','🔖','🌟','😂'];
+
+  /* ---------------- State ---------------- */
+  const state = {
+    frame: FRAMES[0].key,
+    filter: FILTERS[0].key,
+    rawShots: [],
+    stickers: [], // {id,type:'emoji'|'text', content, x, y, size, rotation, color, font}
+    stickerIdCounter: 1,
+    selectedStickerId: null,
+  };
+
+  function currentFilterCss(){ return FILTERS.find(f=>f.key===state.filter).css; }
+  function currentFrame(){ return FRAMES.find(f=>f.key===state.frame); }
+
+  /* ---------------- Screen / step management ---------------- */
+  const screens = {
+    setup: document.getElementById('screen-setup'),
+    capture: document.getElementById('screen-capture'),
+    decorate: document.getElementById('screen-decorate'),
+  };
+  const stepEls = document.querySelectorAll('.step');
+
+  function showScreen(name, stepNum){
+    Object.values(screens).forEach(s=>s.classList.remove('active'));
+    screens[name].classList.add('active');
+    stepEls.forEach(el=>{
+      const n = parseInt(el.dataset.step,10);
+      el.classList.toggle('active', n===stepNum);
+      el.classList.toggle('done', n<stepNum);
+    });
+  }
+
+  /* ---------------- Camera ---------------- */
+  const video = document.getElementById('video');
+  const videoCapture = document.getElementById('videoCapture');
+  const camError = document.getElementById('camError');
+  let stream = null;
+
+  async function initCamera(){
+    camError.classList.remove('show');
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({ video:{ width:1280, height:960 }, audio:false });
+      video.srcObject = stream;
+      videoCapture.srcObject = stream;
+    }catch(err){
+      camError.classList.add('show');
+    }
+  }
+  document.getElementById('retryCam').addEventListener('click', initCamera);
+
+  /* ---------------- Setup screen: frame & filter pickers ---------------- */
+  function makeFrameThumbCanvas(frameDef, w, h){
+    const c = document.createElement('canvas');
+    c.width = STRIP_W; c.height = STRIP_H;
+    const ctx = c.getContext('2d');
+    frameDef.draw(ctx, [], 'none');
+    return c;
+  }
+
+  function buildFrameThumbs(containerId, mini){
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    FRAMES.forEach(fr=>{
+      const wrap = document.createElement('div');
+      wrap.className = mini ? 'mini-frame' : 'frame-thumb';
+      wrap.title = fr.label;
+      if (fr.key===state.frame) wrap.classList.add('selected');
+      const thumbCanvas = makeFrameThumbCanvas(fr);
+      wrap.appendChild(thumbCanvas);
+      wrap.addEventListener('click', ()=>{
+        state.frame = fr.key;
+        syncSelections();
+        if (screens.decorate.classList.contains('active')) composeCanvas();
+      });
+      container.appendChild(wrap);
+    });
+  }
+
+  function buildFilterThumbs(containerId, mini){
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    FILTERS.forEach(f=>{
+      const btn = document.createElement('div');
+      btn.className = mini ? 'mini-filter' : 'filter-thumb';
+      btn.textContent = f.label;
+      if (f.key===state.filter) btn.classList.add('selected');
+      btn.addEventListener('click', ()=>{
+        state.filter = f.key;
+        syncSelections();
+        video.style.filter = currentFilterCss();
+        if (screens.decorate.classList.contains('active')) composeCanvas();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function syncSelections(){
+    document.querySelectorAll('#frameThumbs > div, #frameThumbsMini > div').forEach((el,idx)=>{
+      const list = FRAMES;
+      const i = idx % list.length;
+      el.classList.toggle('selected', list[i].key===state.frame);
+    });
+    document.querySelectorAll('#filterThumbs > div, #filterThumbsMini > div').forEach((el,idx)=>{
+      const list = FILTERS;
+      const i = idx % list.length;
+      el.classList.toggle('selected', list[i].key===state.filter);
+    });
+  }
+
+  buildFrameThumbs('frameThumbs', false);
+  buildFilterThumbs('filterThumbs', false);
+  buildFrameThumbs('frameThumbsMini', true);
+  buildFilterThumbs('filterThumbsMini', true);
+
+  /* ---------------- Capture flow ---------------- */
+  const overlayCenter = document.getElementById('overlayCenter');
+  const flashEl = document.getElementById('flash');
+  const captureLabel = document.getElementById('captureLabel');
+  const shotDots = document.querySelectorAll('.shot-dot');
+
+  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+  async function runCountdown(){
+    for (let n=3; n>=1; n--){
+      overlayCenter.innerHTML = `<div class="countdown-number">${n}</div>`;
+      await sleep(1000);
+    }
+    overlayCenter.innerHTML = `<div class="smile-text">say cheese!</div>`;
+    await sleep(250);
+  }
+
+  function captureRawFrame(){
+    const c = document.createElement('canvas');
+    c.width = PHOTO_W; c.height = PHOTO_H;
+    const ctx = c.getContext('2d');
+    const vw = videoCapture.videoWidth || 1280, vh = videoCapture.videoHeight || 960;
+    const targetRatio = PHOTO_W/PHOTO_H;
+    const srcRatio = vw/vh;
+    let sx,sy,sw,sh;
+    if (srcRatio > targetRatio){
+      sh = vh; sw = vh*targetRatio; sx = (vw-sw)/2; sy = 0;
+    } else {
+      sw = vw; sh = vw/targetRatio; sx = 0; sy = (vh-sh)/2;
+    }
+    // mirror horizontally to match the mirrored preview
+    ctx.translate(PHOTO_W, 0);
+    ctx.scale(-1,1);
+    ctx.drawImage(videoCapture, sx, sy, sw, sh, 0, 0, PHOTO_W, PHOTO_H);
+    return c;
+  }
+
+  async function runCaptureSequence(){
+    state.rawShots = [];
+    shotDots.forEach(d=>{ d.classList.remove('done','active'); });
+    for(let i=0;i<4;i++){
+      shotDots[i].classList.add('active');
+      captureLabel.textContent = `pic ${i+1} of 4 — strike a pose 💅`;
+      await runCountdown();
+      flashEl.classList.remove('go'); void flashEl.offsetWidth; flashEl.classList.add('go');
+      const shot = captureRawFrame();
+      state.rawShots.push(shot);
+      overlayCenter.innerHTML = '';
+      shotDots[i].classList.remove('active');
+      shotDots[i].classList.add('done');
+      await sleep(400);
+    }
+    captureLabel.textContent = 'ate and left no crumbs 🍽️';
+    await sleep(400);
+    goToDecorate();
+  }
+
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    if (!stream){ camError.classList.add('show'); return; }
+    video.style.filter = currentFilterCss();
+    videoCapture.style.filter = currentFilterCss();
+    showScreen('capture', 2);
+    runCaptureSequence();
+  });
+
+  /* ---------------- Decorate screen ---------------- */
+  const finalCanvas = document.getElementById('finalCanvas');
+  const stickerLayer = document.getElementById('stickerLayer');
+
+  function goToDecorate(){
+    showScreen('decorate', 3);
+    composeCanvas();
+    renderStickers();
+  }
+
+  function composeCanvas(){
+    finalCanvas.width = STRIP_W;
+    finalCanvas.height = STRIP_H;
+    const ctx = finalCanvas.getContext('2d');
+    ctx.clearRect(0,0,STRIP_W,STRIP_H);
+    currentFrame().draw(ctx, state.rawShots, currentFilterCss());
+  }
+
+  /* Stickers */
+  const stickerTray = document.getElementById('stickerTray');
+  STICKER_EMOJIS.forEach(e=>{
+    const b = document.createElement('button');
+    b.textContent = e;
+    b.title = 'Add sticker';
+    b.addEventListener('click', ()=> addSticker('emoji', e));
+    stickerTray.appendChild(b);
+  });
+
+  function addSticker(type, content, opts){
+    opts = opts || {};
+    const s = {
+      id: state.stickerIdCounter++,
+      type, content,
+      x: opts.x!=null ? opts.x : 50,
+      y: opts.y!=null ? opts.y : 50,
+      size: opts.size || (type==='emoji' ? 48 : 32),
+      rotation: 0,
+      color: opts.color || '#8a5a4c',
+      font: opts.font || "'Caveat', cursive",
+    };
+    state.stickers.push(s);
+    state.selectedStickerId = s.id;
+    renderStickers();
+  }
+
+  document.getElementById('addCaptionBtn').addEventListener('click', ()=>{
+    const text = document.getElementById('captionInput').value.trim();
+    if (!text) return;
+    const color = document.getElementById('captionColor').value;
+    const font = document.getElementById('captionFont').value;
+    addSticker('text', text, { y:92, size:30, color, font });
+    document.getElementById('captionInput').value = '';
+  });
+
+  function renderStickers(){
+    stickerLayer.innerHTML = '';
+    state.stickers.forEach(s=>{
+      const el = document.createElement('div');
+      el.className = 'sticker' + (s.id===state.selectedStickerId ? ' selected' : '');
+      el.style.left = s.x + '%';
+      el.style.top = s.y + '%';
+      const scaleFactor = 1; // size already in px-ish units scaled by container width via em trick below
+      el.style.transform = `translate(-50%,-50%) rotate(${s.rotation}deg)`;
+      el.dataset.id = s.id;
+
+      const content = document.createElement('span');
+      if (s.type==='emoji'){
+        content.textContent = s.content;
+        content.style.fontSize = fontSizePx(s.size) + 'px';
+      } else {
+        content.textContent = s.content;
+        content.style.fontFamily = s.font;
+        content.style.color = s.color;
+        content.style.fontSize = fontSizePx(s.size) + 'px';
+      }
+      el.appendChild(content);
+
+      const del = document.createElement('div');
+      del.className = 'handle del';
+      del.innerHTML = '✕';
+      del.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); });
+      del.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        state.stickers = state.stickers.filter(st=>st.id!==s.id);
+        renderStickers();
+      });
+      el.appendChild(del);
+
+      const resize = document.createElement('div');
+      resize.className = 'handle resize';
+      el.appendChild(resize);
+
+      const rotate = document.createElement('div');
+      rotate.className = 'handle rotate';
+      el.appendChild(rotate);
+
+      el.addEventListener('pointerdown', (e)=> startDrag(e, s, el));
+      resize.addEventListener('pointerdown', (e)=> startResize(e, s, el));
+      rotate.addEventListener('pointerdown', (e)=> startRotate(e, s, el));
+
+      stickerLayer.appendChild(el);
+    });
+  }
+
+  function fontSizePx(size){
+    // scale sticker size relative to the stage's rendered width
+    const rect = stickerLayer.getBoundingClientRect();
+    const scale = rect.width / REF_W;
+    return Math.max(10, size * scale);
+  }
+
+  stickerLayer.addEventListener('pointerdown', (e)=>{
+    if (e.target === stickerLayer){
+      state.selectedStickerId = null;
+      renderStickers();
+    }
+  });
+
+  function startDrag(e, s, el){
+    e.stopPropagation();
+    e.preventDefault();
+    state.selectedStickerId = s.id;
+    el.classList.add('selected');
+    document.querySelectorAll('.sticker').forEach(o=>{ if(o!==el) o.classList.remove('selected'); });
+    const rect = stickerLayer.getBoundingClientRect();
+    function onMove(ev){
+      const x = ((ev.clientX - rect.left) / rect.width) * 100;
+      const y = ((ev.clientY - rect.top) / rect.height) * 100;
+      s.x = Math.min(100, Math.max(0, x));
+      s.y = Math.min(100, Math.max(0, y));
+      el.style.left = s.x + '%';
+      el.style.top = s.y + '%';
+    }
+    function onUp(){
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
+  function startResize(e, s, el){
+    e.stopPropagation();
+    e.preventDefault();
+    const rect = stickerLayer.getBoundingClientRect();
+    const cx = rect.left + (s.x/100)*rect.width;
+    const cy = rect.top + (s.y/100)*rect.height;
+    function onMove(ev){
+      const dx = ev.clientX - cx, dy = ev.clientY - cy;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      s.size = Math.min(220, Math.max(14, dist * (REF_W/rect.width) * 0.9));
+      renderStickers();
+    }
+    function onUp(){
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
+  function startRotate(e, s, el){
+    e.stopPropagation();
+    e.preventDefault();
+    const rect = stickerLayer.getBoundingClientRect();
+    const cx = rect.left + (s.x/100)*rect.width;
+    const cy = rect.top + (s.y/100)*rect.height;
+    function onMove(ev){
+      const dx = ev.clientX - cx, dy = ev.clientY - cy;
+      let angle = Math.atan2(dy,dx) * 180/Math.PI + 90;
+      s.rotation = Math.round(angle);
+      el.style.transform = `translate(-50%,-50%) rotate(${s.rotation}deg)`;
+    }
+    function onUp(){
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
+  window.addEventListener('resize', ()=> renderStickers());
+
+  /* ---------------- Retake ---------------- */
+  document.getElementById('retakeBtn').addEventListener('click', ()=>{
+    state.rawShots = [];
+    state.stickers = [];
+    state.selectedStickerId = null;
+    showScreen('setup', 1);
+  });
+
+  /* ---------------- Download ---------------- */
+  document.getElementById('downloadBtn').addEventListener('click', ()=>{
+    const out = document.createElement('canvas');
+    out.width = STRIP_W; out.height = STRIP_H;
+    const ctx = out.getContext('2d');
+    ctx.drawImage(finalCanvas, 0, 0);
+
+    state.stickers.forEach(s=>{
+      const px = (s.x/100) * STRIP_W;
+      const py = (s.y/100) * STRIP_H;
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(s.rotation * Math.PI/180);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (s.type === 'emoji'){
+        ctx.font = `${s.size}px sans-serif`;
+        ctx.fillText(s.content, 0, 0);
+      } else {
+        ctx.font = `600 ${s.size}px ${s.font}`;
+        ctx.fillStyle = s.color;
+        ctx.fillText(s.content, 0, 0);
+      }
+      ctx.restore();
+    });
+
+    const link = document.createElement('a');
+    link.download = 'bloom-booth-fit-pic.png';
+    link.href = out.toDataURL('image/png');
+    link.click();
+  });
+
+  /* ---------------- Init ---------------- */
+  initCamera();
+  syncSelections();
+})();
+</script>
+</body>
+</html>
